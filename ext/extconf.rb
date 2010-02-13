@@ -18,8 +18,12 @@ os  = Config::CONFIG['target_os']
 os.gsub!  /[0-9.]+$/, ''
 
 # On OSX, this is "powerpc", even on Intel...
-#cpu = Config::CONFIG['target_cpu']
-cpu = `uname -p`.chomp
+if os == 'darwin'
+  cpu = Config::CONFIG['ARCH_FLAG']
+  cpu.gsub!(/-arch /, '')
+else
+  cpu = `uname -p`.chomp
+end
 
 dir = "#{cpu}-#{os}"
 symlink "#{dir}/dtrace_probe.c", "dtrace_probe.c"

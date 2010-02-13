@@ -1,0 +1,11 @@
+*~
+.#*
+*#
+ext/Makefile
+ext/conftest.dSYM/
+ext/dof/Makefile
+ext/dtrace_probe.c
+*.o
+ext/dof/dof_api.bundle
+ext/dtrace_api.bundle
+pkg

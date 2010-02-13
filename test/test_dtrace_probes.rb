@@ -312,6 +312,9 @@ EOD
     c.consume_once do |d|
       data << d
     end
+    
+    require 'pp'
+    pp data
 
     assert_equal 8, data.length
 
