@@ -22,7 +22,7 @@ if os == 'darwin'
   cpu = Config::CONFIG['ARCH_FLAG']
   cpu.gsub!(/-arch /, '')
 else
-  cpu = `uname -p`.chomp
+  cpu = Config::CONFIG['CC'] =~ /64/ ? 'x86_64' : 'i386'
 end
 
 dir = "#{cpu}-#{os}"

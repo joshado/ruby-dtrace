@@ -12,7 +12,7 @@ RUBY_EXTERN VALUE eDtraceException;
 
 #define ARGC_MAX 6
 #define FUNC_SIZE 256
-#define IS_ENABLED_FUNC_LEN 12
+#define IS_ENABLED_FUNC_LEN 8
 
 void install_insns(uint8_t *probe_insns, uint8_t *insns, int count)
 {
@@ -39,20 +39,17 @@ VALUE dtraceprobe_init(VALUE self, VALUE rargc)
 
   /* First initialise the is_enabled tracepoint */
   uint8_t insns[FUNC_SIZE] = {
-    0x55, 0x48, 0x89, 0xe5, 
-    0x48, 0x33, 0xc0, 0x90, 
-    0x90, 0xc9, 0xc3, 0x00
+    0x48, 0x33, 0xc0, 0xc3,
+    0x90, 0x00, 0x00, 0x00
   };
 
   if (argc <= ARGC_MAX) {
     {
       uint8_t probe_insns[FUNC_SIZE] = {
-	0x55, 0x48, 0x89, 0xe5, 
-	0x90, 0x0f, 0x1f, 0x40, 
-	0x00, 0xc9, 0xc3, 0x0f, 
-	0x1f, 0x44, 0x00, 0x00
+	0xc3, 0x90, 0x90, 0x90,
+	0x90, 0x00, 0x00, 0x00
       };
-      install_insns(probe_insns, &insns[IS_ENABLED_FUNC_LEN], 4);
+      install_insns(probe_insns, &insns[IS_ENABLED_FUNC_LEN], 2);
     }
   }
   else {
@@ -61,7 +58,7 @@ VALUE dtraceprobe_init(VALUE self, VALUE rargc)
   }
 
   /* allocate memory on a page boundary, for mprotect */
-  probe->func = (void *)valloc(FUNC_SIZE);
+  probe->func = (void *)memalign(PAGESIZE, FUNC_SIZE);
   if (probe->func < 0) {
     rb_raise(eDtraceException, "malloc failed: %s\n", strerror(errno));
     return Qnil;
@@ -151,27 +148,12 @@ VALUE dtraceprobe_fire(int argc, VALUE *ruby_argv, VALUE self) {
   return Qnil;
 }
 
-/* 
- * Returns the offset for this probe in the PROFFS section, based on
- * the location of the DOF, and the location of this probe.
- */
-VALUE dtraceprobe_probe_offset(VALUE self, VALUE file_addr, VALUE argc)
+VALUE dtraceprobe_probe_offset(VALUE self, VALUE rfile, VALUE argc)
 {
-  void *probe_addr;
-  int offset;
-  offset = 6 + IS_ENABLED_FUNC_LEN;
-  probe_addr = (void *)NUM2LL(rb_funcall(self, rb_intern("addr"), 0));
-  return INT2FIX((uint64_t)probe_addr - (uint64_t)NUM2LL(file_addr) + offset);
+  return INT2FIX(IS_ENABLED_FUNC_LEN);
 }
 
-/* 
- * Returns the offset for this probe's is-enabled tracepoint in the
- * PRENOFFS section, based on the location of the DOF, and the
- * location of this probe.
- */
-VALUE dtraceprobe_is_enabled_offset(VALUE self, VALUE file_addr)
+VALUE dtraceprobe_is_enabled_offset(VALUE self, VALUE rfile)
 {
-  void *probe_addr;
-  probe_addr = (void *)NUM2LL(rb_funcall(self, rb_intern("addr"), 0));
-  return INT2FIX((uint64_t)probe_addr - (uint64_t)NUM2LL(file_addr) + 6);
+  return INT2FIX(1);
 }

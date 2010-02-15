@@ -77,7 +77,7 @@ VALUE dtrace_hdl_alloc(VALUE klass)
     return obj;
   }
   else {
-    rb_raise(eDtraceException, "unable to open dtrace (not root?)");
+    rb_raise(eDtraceException, "unable to open dtrace: %s (not root?)", strerror(err));
   }
 }
 
